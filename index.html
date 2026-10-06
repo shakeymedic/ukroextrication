@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UKRO Guided Vehicle Extrication Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .step-section {
+            transition: all 0.5s ease-in-out;
+            overflow: hidden;
+        }
+        .step-locked {
+            opacity: 0.5;
+            pointer-events: none;
+            max-height: 100px;
+        }
+        .step-unlocked {
+            opacity: 1;
+            pointer-events: auto;
+            max-height: 1000px; /* Large enough for content */
+        }
+        .step-header {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .step-header .step-number {
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 9999px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+        .step-locked .step-header .step-number {
+            background-color: #9ca3af;
+        }
+        .custom-checkbox:checked {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+        .custom-checkbox:checked + label {
+            text-decoration: line-through;
+            color: #6b7280;
+        }
+        .note-textarea {
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            color: #1f2937;
+            font-family: monospace;
+        }
+        .btn-decision {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-gray-900 text-white shadow-lg">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-2 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold">Guided Extrication Tool</h1>
+                <p class="text-sm text-gray-300">A UKRO Resource</p>
+            </div>
+            <img src="data:image/png;base64,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" alt="UKRO Logo" class="h-16 w-auto">
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="checklist-form" class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Step 1: Scene Assessment -->
+        <section id="step1" class="step-section step-unlocked">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <h2>Scene Assessment</h2>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="flex items-center">
+                    <input id="chk-scene-safe" type="checkbox" class="h-5 w-5 rounded custom-checkbox">
+                    <label for="chk-scene-safe" class="ml-3 text-gray-700 font-medium">The scene is safe and the vehicle is stable.</label>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 2: Patient Assessment & Pathway -->
+        <section id="step2" class="step-section step-locked">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <h2>Patient Assessment & Pathway</h2>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <!-- Hidden radio buttons for logic -->
+                <div class="hidden">
+                    <input id="rad-self" name="pathway" type="radio"><label for="rad-self"></label>
+                    <input id="rad-rapid" name="pathway" type="radio"><label for="rad-rapid"></label>
+                    <input id="rad-planned" name="pathway" type="radio"><label for="rad-planned"></label>
+                </div>
+
+                <!-- Guided Questions -->
+                <div id="pathway-questions">
+                    <div id="q1-container">
+                        <p class="font-medium text-gray-800 mb-4">Is the patient alert, able to obey commands, and has no obvious signs of severe injury or spinal compromise?</p>
+                        <div class="flex space-x-4">
+                            <button id="q1-yes" class="btn-decision w-full bg-green-200 hover:bg-green-300 text-green-800">Yes</button>
+                            <button id="q1-no" class="btn-decision w-full bg-red-200 hover:bg-red-300 text-red-800">No</button>
+                        </div>
+                    </div>
+                    <div id="q2-container" class="hidden mt-6">
+                         <p class="font-medium text-gray-800 mb-4">Does the patient have any immediate, time-critical life threats (e.g. airway compromise, catastrophic haemorrhage)?</p>
+                        <div class="flex space-x-4">
+                            <button id="q2-yes" class="btn-decision w-full bg-green-200 hover:bg-green-300 text-green-800">Yes</button>
+                            <button id="q2-no" class="btn-decision w-full bg-red-200 hover:bg-red-300 text-red-800">No</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pathway Recommendation -->
+                <div id="pathway-recommendation" class="hidden">
+                    <h3 class="text-base font-semibold text-gray-600">Recommended Pathway:</h3>
+                    <p id="recommendation-text" class="p-4 mt-2 rounded-lg text-xl font-bold text-center"></p>
+                    <button id="reset-pathway-btn" class="mt-4 text-sm text-blue-600 hover:underline">Change selection</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 3: Action Checklist -->
+        <section id="step3" class="step-section step-locked">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <h2>Action Checklist</h2>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div id="action-checklist-container">
+                    <p class="text-gray-500">Complete Step 2 to see the relevant actions.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 4: Generated Note -->
+        <section id="step4" class="step-section step-unlocked">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <h2>Generated Patient Note</h2>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <label for="note-output" class="block text-sm font-medium text-gray-700 mb-2">This note is auto-generated based on your selections.</label>
+                <textarea id="note-output" rows="12" class="w-full p-3 rounded-md note-textarea" readonly></textarea>
+                <button id="copy-btn" class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    Copy to Clipboard
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-400 mt-12">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center">
+            <p class="text-sm">&copy; 2024 Guided Extrication Tool. For training and informational purposes only.</p>
+            <p class="text-xs mt-2">This guide is not a substitute for professional training, certification, and on-scene command decisions. Always follow local protocols.</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- DOM Elements ---
+        const form = document.getElementById('checklist-form');
+        const noteOutput = document.getElementById('note-output');
+        const copyBtn = document.getElementById('copy-btn');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+        const chkSceneSafe = document.getElementById('chk-scene-safe');
+        const actionChecklistContainer = document.getElementById('action-checklist-container');
+        
+        // Pathway Question Elements
+        const pathwayQuestions = document.getElementById('pathway-questions');
+        const pathwayRecommendation = document.getElementById('pathway-recommendation');
+        const recommendationText = document.getElementById('recommendation-text');
+        const q1Container = document.getElementById('q1-container');
+        const q2Container = document.getElementById('q2-container');
+        const resetPathwayBtn = document.getElementById('reset-pathway-btn');
+
+        // --- Data Maps ---
+        const noteMap = {
+            'chk-scene-safe': 'Scene assessed as safe and vehicle stabilised.',
+            'rad-self': 'Patient assessed as suitable for medically supervised self-extrication.',
+            'rad-rapid': 'Patient assessed with time-critical injuries, requiring rapid extrication.',
+            'rad-planned': 'Patient assessed as trapped but clinically stable, proceeding with planned, controlled extrication.',
+            'chk-self-path': 'Action: Cleared safe egress path for patient.',
+            'chk-self-instruct': 'Action: Provided verbal instruction for self-extrication.',
+            'chk-rapid-door': 'Action: Door(s) removed for rapid access.',
+            'chk-rapid-cuts': 'Action: Minimal cuts performed to create space.',
+            'chk-unlock': 'Action: Unlock / Unlatch doors.',
+            'chk-side': 'Action: Side / Seat manipulation completed.',
+            'chk-trim': 'Action: Interior trim removed to expose structure.',
+            'chk-electrics': 'Action: Vehicle electrics (12V) isolated.',
+            'chk-peel': 'Action: Roof or side panels peeled/removed.',
+            'chk-out': 'Action: Patient extricated from vehicle.',
+            'chk-undress': 'Action: Vehicle further undressed post-extrication.',
+            'chk-tbone': 'Action: B-pillar removed (T-bone).',
+        };
+
+        const checklistTemplates = {
+            'rad-self': `<h3 class="text-lg font-bold mb-3 text-blue-600">Self-Extrication Actions</h3><div class="space-y-3"><div class="flex items-center"><input id="chk-self-path" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-self-path" class="ml-3 text-gray-700">Clear a safe egress path.</label></div><div class="flex items-center"><input id="chk-self-instruct" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-self-instruct" class="ml-3 text-gray-700">Provide verbal instruction and supervision.</label></div></div>`,
+            'rad-rapid': `<h3 class="text-lg font-bold mb-3 text-yellow-600">Rapid Extrication Actions</h3><div class="space-y-3"><div class="flex items-center"><input id="chk-electrics" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-electrics" class="ml-3 text-gray-700">Isolate vehicle electrics (12V).</label></div><div class="flex items-center"><input id="chk-rapid-door" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-rapid-door" class="ml-3 text-gray-700">Perform door removal.</label></div><div class="flex items-center"><input id="chk-rapid-cuts" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-rapid-cuts" class="ml-3 text-gray-700">Make minimal cuts to create immediate space.</label></div><div class="flex items-center"><input id="chk-out" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-out" class="ml-3 text-gray-700">Extricate patient.</label></div></div>`,
+            'rad-planned': `<h3 class="text-lg font-bold mb-3 text-purple-600">Planned Extrication Actions (U Step Out)</h3><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div class="flex items-center"><input id="chk-unlock" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-unlock" class="ml-3 text-gray-700"><strong>U</strong> - Unlock / Unlatch</label></div><div class="flex items-center"><input id="chk-side" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-side" class="ml-3 text-gray-700"><strong>S</strong> - Side / Seat</label></div><div class="flex items-center"><input id="chk-trim" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-trim" class="ml-3 text-gray-700"><strong>T</strong> - Trim removal</label></div><div class="flex items-center"><input id="chk-electrics" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-electrics" class="ml-3 text-gray-700"><strong>E</strong> - Electrics isolated</label></div><div class="flex items-center"><input id="chk-peel" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-peel" class="ml-3 text-gray-700"><strong>P</strong> - Peel panels / roof</label></div><div class="flex items-center"><input id="chk-out" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-out" class="ml-3 text-gray-700"><strong>O</strong> - Out (extricate)</label></div><div class="flex items-center"><input id="chk-undress" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-undress" class="ml-3 text-gray-700"><strong>U</strong> - Undress vehicle</label></div><div class="flex items-center"><input id="chk-tbone" type="checkbox" class="h-5 w-5 rounded custom-checkbox"><label for="chk-tbone" class="ml-3 text-gray-700"><strong>T</strong> - T-Bone (B-pillar)</label></div></div>`
+        };
+
+        // --- Core Logic ---
+        function setPathway(pathwayId, text, colorClass) {
+            pathwayQuestions.classList.add('hidden');
+            pathwayRecommendation.classList.remove('hidden');
+            
+            recommendationText.textContent = text;
+            recommendationText.className = `p-4 mt-2 rounded-lg text-xl font-bold text-center ${colorClass}`;
+
+            document.getElementById(pathwayId).checked = true;
+            
+            step3.classList.replace('step-locked', 'step-unlocked');
+            actionChecklistContainer.innerHTML = checklistTemplates[pathwayId];
+            
+            generateNote();
+        }
+
+        function resetPathway() {
+            pathwayQuestions.classList.remove('hidden');
+            pathwayRecommendation.classList.add('hidden');
+            q1Container.classList.remove('hidden');
+            q2Container.classList.add('hidden');
+
+            const checkedRadio = document.querySelector('input[name="pathway"]:checked');
+            if (checkedRadio) {
+                checkedRadio.checked = false;
+            }
+            
+            step3.classList.replace('step-unlocked', 'step-locked');
+            actionChecklistContainer.innerHTML = '<p class="text-gray-500">Complete Step 2 to see the relevant actions.</p>';
+            
+            generateNote();
+        }
+
+        function handleSceneSafeChange() {
+            if (chkSceneSafe.checked) {
+                step2.classList.replace('step-locked', 'step-unlocked');
+            } else {
+                step2.classList.replace('step-unlocked', 'step-locked');
+                resetPathway();
+            }
+            generateNote();
+        }
+
+        function generateNote() {
+            const noteLines = [];
+            noteLines.push('--- VEHICLE EXTRICATION NOTE ---');
+            noteLines.push(`Date/Time: ${new Date().toLocaleString('en-GB')}`);
+            noteLines.push('');
+
+            noteLines.push('// ASSESSMENT & PATHWAY //');
+            if (chkSceneSafe.checked) noteLines.push(`- ${noteMap['chk-scene-safe']}`);
+            
+            const pathway = document.querySelector('input[name="pathway"]:checked');
+            if (pathway) noteLines.push(`- Pathway: ${noteMap[pathway.id]}`);
+            noteLines.push('');
+
+            noteLines.push('// ACTIONS TAKEN //');
+            const checkboxes = form.querySelectorAll('input[type="checkbox"]:checked');
+            checkboxes.forEach(cb => {
+                if (cb.id !== 'chk-scene-safe' && noteMap[cb.id]) {
+                    noteLines.push(`- ${noteMap[cb.id]}`);
+                }
+            });
+
+            noteOutput.value = noteLines.join('\n');
+        }
+
+        function copyToClipboard() {
+            try {
+                navigator.clipboard.writeText(noteOutput.value).then(updateCopyButtonState);
+            } catch (err) {
+                noteOutput.select();
+                document.execCommand('copy');
+                updateCopyButtonState();
+            }
+        }
+        
+        function updateCopyButtonState() {
+            const originalHTML = copyBtn.innerHTML;
+            copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Copied!`;
+            copyBtn.classList.replace('bg-blue-600', 'bg-green-500');
+            copyBtn.disabled = true;
+
+            setTimeout(() => {
+                copyBtn.innerHTML = originalHTML;
+                copyBtn.classList.replace('bg-green-500', 'bg-blue-600');
+                copyBtn.disabled = false;
+            }, 2000);
+        }
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', handleSceneSafeChange);
+        
+        chkSceneSafe.addEventListener('change', handleSceneSafeChange);
+        
+        form.addEventListener('change', (event) => {
+            if (event.target.closest('#step3')) {
+                generateNote();
+            }
+        });
+
+        copyBtn.addEventListener('click', copyToClipboard);
+        resetPathwayBtn.addEventListener('click', resetPathway);
+
+        // Pathway Question Listeners
+        document.getElementById('q1-yes').addEventListener('click', () => setPathway('rad-self', 'Medically Supervised Self-Extrication', 'bg-blue-100 text-blue-800'));
+        document.getElementById('q1-no').addEventListener('click', () => {
+            q1Container.classList.add('hidden');
+            q2Container.classList.remove('hidden');
+        });
+        document.getElementById('q2-yes').addEventListener('click', () => setPathway('rad-rapid', 'Rapid Extrication', 'bg-yellow-100 text-yellow-800'));
+        document.getElementById('q2-no').addEventListener('click', () => setPathway('rad-planned', 'Planned, Controlled Extrication', 'bg-purple-100 text-purple-800'));
+
+    </script>
+
+</body>
+</html>
